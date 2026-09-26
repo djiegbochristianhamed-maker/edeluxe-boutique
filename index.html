@@ -1,1 +1,48 @@
-https://djiegbochristianhamed-maker.github.io/edeluxe-boutique/
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /interventions/{interventionId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['numero','clientNom','clientTel','montantTotal','statut']);
+      allow update: if
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['statut','confirmedAt'])
+          && request.resource.data.statut in ['confirmee','reportee','annulee'])
+        ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['statut','materiauxUtilises','coutTotalMateriaux','remarquesTechnicien','soldeEncaisse','termineAt','photoAvant','photoApres'])
+          && request.resource.data.statut in ['terminee','payee'])
+        ||
+        request.auth != null;
+      allow delete: if request.auth != null;
+    }
+
+    match /techniciens/{techId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+
+    match /contrats/{contratId} {
+      allow read: if true;
+      allow update: if
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['statutClient','accepteAt','signatureData'])
+        || request.auth != null;
+      allow create: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+
+    match /fiches/{ficheId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['statutClient','accepteAt','signatureData'])
+        || request.auth != null;
+      allow delete: if request.auth != null;
+    }
+
+    match /produits/{produitId} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}
