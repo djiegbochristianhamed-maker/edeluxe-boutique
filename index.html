@@ -3,98 +3,396 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EDELUXE — Boutique</title>
+<title>EDELUXE — Gestion des produits</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
   :root{
-    --ink:#15130E; --ink-2:#1D1A13; --ink-3:#262119; --cream:#F4EEE1; --stone:#9C9686; --blue:#5B84D9; --green:#3EA35C;
+    --ink:#15130E; --ink-2:#1D1A13; --ink-3:#262119; --cream:#F4EEE1; --stone:#9C9686; --blue:#5B84D9; --green:#3EA35C; --red:#D9694F;
   }
   *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
   html,body{ min-height:100%; background:var(--ink); }
-  body{ font-family:'Manrope',sans-serif; color:var(--cream); line-height:1.5; padding-bottom:100px; }
+  body{ font-family:'Manrope',sans-serif; color:var(--cream); padding:24px 18px 60px; line-height:1.5; }
+  .eyebrow{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:.14em; color:var(--stone); text-transform:uppercase; margin-bottom:6px; }
+  h1{ font-family:'Fraunces',serif; font-weight:600; font-size:24px; margin-bottom:22px; }
+  h2{ font-family:'Fraunces',serif; font-weight:600; font-size:17px; margin:30px 0 14px; }
+  label{ display:block; font-size:12.5px; color:var(--stone); margin-bottom:6px; margin-top:14px; }
+  input[type=text], input[type=number], textarea{
+    width:100%; background:var(--ink-2); border:1px solid rgba(244,238,225,0.15);
+    border-radius:10px; padding:11px 13px; color:var(--cream); font-family:'Manrope',sans-serif; font-size:14px;
+  }
+  input[type=text], input[type=number]{ height:44px; padding:0 13px; }
+  textarea{ resize:vertical; }
+  input:focus, textarea:focus{ outline:none; border-color:var(--blue); }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .photo-btn{
+    margin-top:6px; width:100%; height:44px; background:var(--ink-2); border:1px dashed rgba(244,238,225,0.25);
+    border-radius:10px; color:var(--cream); font-family:'Manrope',sans-serif; font-size:13px;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  #photoPreview{ margin-top:10px; display:none; }
+  #photoPreview img{ width:100%; max-height:180px; object-fit:cover; border-radius:10px; }
+  .switch-row{ display:flex; align-items:center; justify-content:space-between; margin-top:16px; padding:12px 14px; background:var(--ink-2); border-radius:10px; gap:12px; }
+  .switch{ width:42px; height:24px; border-radius:999px; background:rgba(244,238,225,0.2); position:relative; flex-shrink:0; }
+  .switch.on{ background:var(--green); }
+  .switch .knob{ width:18px; height:18px; border-radius:50%; background:#fff; position:absolute; top:3px; left:3px; transition:.2s; }
+  .switch.on .knob{ left:21px; }
+  .btn{ margin-top:22px; width:100%; height:48px; border-radius:10px; font-family:'Manrope',sans-serif; font-size:14px; font-weight:600; cursor:pointer; border:none; }
+  .btn-primary{ background:var(--blue); color:#fff; }
+  .btn-ghost{ background:transparent; border:1px solid rgba(244,238,225,0.25); color:var(--cream); margin-top:10px; }
+
+  .prod-card{ display:flex; gap:12px; background:var(--ink-2); border-radius:12px; padding:12px; margin-bottom:10px; align-items:center; }
+  .prod-card img{ width:56px; height:56px; border-radius:8px; object-fit:cover; flex-shrink:0; background:var(--ink-3); }
+  .prod-info{ flex:1; min-width:0; }
+  .prod-name{ font-size:14px; font-weight:600; }
+  .prod-meta{ font-size:12px; color:var(--stone); margin-top:2px; }
+  .prod-badge{ display:inline-block; font-size:10px; font-weight:700; padding:2px 7px; border-radius:5px; margin-left:6px; }
+  .prod-badge.on{ background:rgba(62,163,92,0.18); color:#6BC488; }
+  .prod-badge.off{ background:rgba(217,105,79,0.18); color:#E88F76; }
+  .prod-actions{ display:flex; gap:6px; flex-shrink:0; }
+  .icon-btn{ width:32px; height:32px; border-radius:8px; background:var(--ink-3); display:flex; align-items:center; justify-content:center; border:none; cursor:pointer; }
+  .icon-btn svg{ width:15px; height:15px; stroke:var(--cream); }
+  .empty{ text-align:center; color:var(--stone); font-size:13px; padding:30px 0; }
+  a.storelink{ color:var(--blue); font-size:13px; }
+</style>
+</head>
+<body>
+
+<div class="eyebrow">Outil interne — EDELUXE</div>
+<h1>Gestion des produits</h1>
+
+<div id="formTitle" style="font-family:'Fraunces',serif; font-weight:600; font-size:16px; margin-bottom:4px;">Nouveau produit</div>
+
+<label>Nom du produit</label>
+<input type="text" id="fNom" placeholder="Ex. Gants isolants 1000V">
+
+<div class="row2">
+  <div>
+    <label>Prix (FCFA)</label>
+    <input type="number" id="fPrix" placeholder="Ex. 3500">
+  </div>
+  <div>
+    <label>Catégorie</label>
+    <input type="text" id="fCategorie" placeholder="Ex. Protection">
+  </div>
+</div>
+
+<label>Description (optionnel)</label>
+<textarea id="fDescription" rows="3" placeholder="Ex. Gants en cuir renforcé, isolation jusqu'à 1000V, taille unique."></textarea>
+
+<label>Photo du produit</label>
+<input type="file" id="fPhotoInput" accept="image/*" style="display:none;">
+<div class="photo-btn" id="fPhotoBtn">📷 Choisir une photo</div>
+<div id="photoPreview"><img id="photoPreviewImg" alt=""></div>
+
+<div class="switch-row">
+  <span style="font-size:13px;">Disponible à la vente <span style="color:var(--stone); font-weight:400; display:block; font-size:11.5px; margin-top:2px;">Désactivé = masqué du client (jamais supprimé)</span></span>
+  <div class="switch on" id="fDispo"><div class="knob"></div></div>
+</div>
+
+<button class="btn btn-primary" id="btnSave">Ajouter le produit</button>
+<button class="btn btn-ghost" id="btnCancelEdit" style="display:none;">Annuler la modification</button>
+
+<h2>Tes produits</h2>
+<div id="prodList"><div class="empty">Chargement...</div></div>
+
+<p style="margin-top:30px; font-size:12px; color:var(--stone);">
+  Lien de ta boutique publique (à partager aux clients) :<br>
+  <a class="storelink" href="index.html" target="_blank">index.html</a> — ne partage jamais ce lien de gestion.
+</p>
+
+<script type="module">
+import { db, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from "./firebase-config.js";
+
+let editingId = null;
+let photoData = null;
+
+const fPhotoBtn = document.getElementById('fPhotoBtn');
+const fPhotoInput = document.getElementById('fPhotoInput');
+fPhotoBtn.onclick = () => fPhotoInput.click();
+fPhotoInput.onchange = (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    const img = new Image();
+    img.onload = () => {
+      const maxW = 500;
+      const scale = Math.min(1, maxW / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      photoData = canvas.toDataURL('image/jpeg', 0.8);
+      document.getElementById('photoPreview').style.display = 'block';
+      document.getElementById('photoPreviewImg').src = photoData;
+    };
+    img.src = evt.target.result;
+  };
+  reader.readAsDataURL(file);
+};
+
+const fDispo = document.getElementById('fDispo');
+fDispo.onclick = () => fDispo.classList.toggle('on');
+
+function resetForm(){
+  editingId = null;
+  photoData = null;
+  document.getElementById('formTitle').textContent = 'Nouveau produit';
+  document.getElementById('fNom').value = '';
+  document.getElementById('fPrix').value = '';
+  document.getElementById('fCategorie').value = '';
+  document.getElementById('fDescription').value = '';
+  document.getElementById('photoPreview').style.display = 'none';
+  fDispo.classList.add('on');
+  document.getElementById('btnSave').textContent = 'Ajouter le produit';
+  document.getElementById('btnCancelEdit').style.display = 'none';
+}
+
+document.getElementById('btnSave').onclick = async () => {
+  const nom = document.getElementById('fNom').value.trim();
+  const prix = parseFloat(document.getElementById('fPrix').value);
+  const categorie = document.getElementById('fCategorie').value.trim() || 'Autre';
+  const description = document.getElementById('fDescription').value.trim();
+  const disponible = fDispo.classList.contains('on');
+
+  if(!nom || !prix){ alert('Merci de renseigner au moins le nom et le prix.'); return; }
+
+  const data = { nom, prix, categorie, description, disponible };
+  if(photoData) data.photo = photoData;
+
+  try{
+    if(editingId){
+      await updateDoc(doc(db, "produits", editingId), data);
+    } else {
+      if(!photoData){ alert('Ajoute une photo pour ce produit.'); return; }
+      await addDoc(collection(db, "produits"), { ...data, createdAt: serverTimestamp() });
+    }
+    resetForm();
+  }catch(err){
+    alert('Erreur : ' + err.message);
+  }
+};
+
+document.getElementById('btnCancelEdit').onclick = resetForm;
+
+window.editProduit = function(id, nom, prix, categorie, description, disponible, photo){
+  editingId = id;
+  photoData = photo || null;
+  document.getElementById('formTitle').textContent = 'Modifier le produit';
+  document.getElementById('fNom').value = nom;
+  document.getElementById('fPrix').value = prix;
+  document.getElementById('fCategorie').value = categorie;
+  document.getElementById('fDescription').value = description || '';
+  if(photo){
+    document.getElementById('photoPreview').style.display = 'block';
+    document.getElementById('photoPreviewImg').src = photo;
+  }
+  fDispo.classList.toggle('on', disponible);
+  document.getElementById('btnSave').textContent = 'Enregistrer les modifications';
+  document.getElementById('btnCancelEdit').style.display = 'block';
+  window.scrollTo({ top:0, behavior:'smooth' });
+};
+
+window.supprimerProduit = async function(id){
+  if(!confirm('Supprimer définitivement ce produit ?')) return;
+  await deleteDoc(doc(db, "produits", id));
+};
+
+window.toggleDispo = async function(id, current){
+  await updateDoc(doc(db, "produits", id), { disponible: !current });
+};
+
+const q = query(collection(db, "produits"), orderBy("createdAt", "desc"));
+onSnapshot(q, (snap) => {
+  const list = document.getElementById('prodList');
+  if(snap.empty){
+    list.innerHTML = '<div class="empty">Aucun produit pour le moment.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  snap.forEach(d => {
+    const p = d.data();
+    const card = document.createElement('div');
+    card.className = 'prod-card';
+    const photoSafe = (p.photo||'').replace(/'/g, "\\'");
+    const nomSafe = (p.nom||'').replace(/'/g, "\\'");
+    const catSafe = (p.categorie||'').replace(/'/g, "\\'");
+    const descSafe = (p.description||'').replace(/'/g, "\\'").replace(/\n/g, ' ');
+    card.innerHTML = `
+      <img src="${p.photo||''}" alt="">
+      <div class="prod-info">
+        <div class="prod-name">${p.nom}<span class="prod-badge ${p.disponible?'on':'off'}">${p.disponible?'Dispo':'Masqué'}</span></div>
+        <div class="prod-meta">${(p.prix||0).toLocaleString('fr-FR')} FCFA · ${p.categorie||'—'}</div>
+      </div>
+      <div class="prod-actions">
+        <button class="icon-btn" onclick="toggleDispo('${d.id}', ${p.disponible})" title="Afficher/masquer côté client">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12A10 10 0 1 1 12 2"/><path d="M22 2 12 12"/></svg>
+        </button>
+        <button class="icon-btn" onclick="editProduit('${d.id}','${nomSafe}',${p.prix},'${catSafe}','${descSafe}',${p.disponible},'${photoSafe}')" title="Modifier">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </button>
+        <button class="icon-btn" onclick="supprimerProduit('${d.id}')" title="Supprimer définitivement">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        </button>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+});
+</script>
+</body>
+</html>
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EDELUXE — Boutique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+  :root{
+    --ink:#120F0A; --ink-2:#1C1712; --ink-3:#292219; --cream:#F4EEE1; --stone:#9C9686;
+    --gold:#D4A843; --gold-light:#EAC873; --gold-dark:#A67C2E;
+    --blue:#5B84D9; --green:#3EA35C;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html,body{ min-height:100%; background:var(--ink); }
+  body{
+    font-family:'Manrope',sans-serif; color:var(--cream); line-height:1.5; padding-bottom:100px;
+    background:
+      radial-gradient(ellipse 700px 380px at 50% -8%, rgba(212,168,67,0.12), transparent),
+      var(--ink);
+  }
   button{ font-family:inherit; cursor:pointer; border:none; }
 
-  header{ padding:26px 20px 18px; text-align:center; }
-  .brand{ font-family:'Fraunces',serif; font-weight:700; font-size:26px; letter-spacing:.02em; }
-  .tagline{ font-size:12.5px; color:var(--stone); margin-top:4px; }
+  header{ padding:30px 20px 20px; text-align:center; position:relative; }
+  .brand{
+    font-family:'Fraunces',serif; font-weight:800; font-size:30px; letter-spacing:.04em;
+    background:linear-gradient(135deg, var(--gold-light), var(--gold) 55%, var(--gold-dark));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .brand-rule{ width:46px; height:2px; background:linear-gradient(90deg, transparent, var(--gold), transparent); margin:9px auto 10px; }
+  .tagline{ font-size:12.5px; color:var(--stone); letter-spacing:.02em; }
 
-  .cat-scroll{ display:flex; gap:8px; overflow-x:auto; padding:4px 20px 18px; scrollbar-width:none; }
+  .cat-scroll{ display:flex; gap:9px; overflow-x:auto; padding:14px 20px 20px; scrollbar-width:none; }
   .cat-scroll::-webkit-scrollbar{ display:none; }
   .cat-chip{
-    flex-shrink:0; padding:8px 15px; border-radius:999px; background:var(--ink-2);
-    border:1px solid rgba(244,238,225,0.12); font-size:12.5px; font-weight:600; color:var(--stone);
+    flex-shrink:0; padding:9px 17px; border-radius:999px; background:var(--ink-2);
+    border:1px solid rgba(244,238,225,0.1); font-size:12.5px; font-weight:700; color:var(--stone);
+    transition:.2s ease;
   }
-  .cat-chip.active{ background:var(--blue); color:#fff; border-color:var(--blue); }
+  .cat-chip.active{
+    background:linear-gradient(135deg, var(--gold-light), var(--gold));
+    color:var(--ink); border-color:transparent; box-shadow:0 4px 14px rgba(212,168,67,0.35);
+  }
 
   main{ padding:0 16px; max-width:640px; margin:0 auto; }
-  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
   .prod-card{
-    background:var(--ink-2); border-radius:16px; overflow:hidden;
+    background:var(--ink-2); border-radius:18px; overflow:hidden;
     display:flex; flex-direction:column; animation:cardIn .4s ease both;
+    border:1px solid rgba(244,238,225,0.06);
+    transition:transform .18s ease, box-shadow .18s ease;
   }
+  .prod-card:active{ transform:scale(0.97); }
   @keyframes cardIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
-  .prod-photo{ width:100%; aspect-ratio:1; object-fit:cover; background:var(--ink-3); }
-  .prod-photo-wrap{ position:relative; }
-  .prod-badge-rupture{
-    position:absolute; inset:0; background:rgba(21,19,14,0.72); display:flex; align-items:center; justify-content:center;
-    font-size:12px; font-weight:700; color:var(--cream); text-transform:uppercase; letter-spacing:.05em;
+  .prod-photo-wrap{ position:relative; cursor:pointer; }
+  .prod-photo{ width:100%; aspect-ratio:1; object-fit:cover; background:var(--ink-3); display:block; }
+  .prod-body{ padding:12px 13px 14px; display:flex; flex-direction:column; gap:6px; flex:1; }
+  .prod-name{ font-size:13.5px; font-weight:700; line-height:1.3; cursor:pointer; }
+  .prod-desc-line{ font-size:11.5px; color:var(--stone); line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .prod-price-chip{
+    display:inline-flex; align-self:flex-start; font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600;
+    color:var(--gold-light); background:rgba(212,168,67,0.12); border:1px solid rgba(212,168,67,0.3);
+    padding:4px 10px; border-radius:8px; margin-top:2px;
   }
-  .prod-body{ padding:11px 12px 13px; display:flex; flex-direction:column; gap:6px; flex:1; }
-  .prod-name{ font-size:13.5px; font-weight:600; line-height:1.3; }
-  .prod-price{ font-family:'IBM Plex Mono',monospace; font-size:14px; color:var(--blue); font-weight:500; }
   .prod-add{
-    margin-top:auto; height:36px; border-radius:9px; background:var(--blue); color:#fff;
-    font-size:12.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:6px;
+    margin-top:auto; height:38px; border-radius:10px;
+    background:linear-gradient(135deg, var(--gold-light), var(--gold));
+    color:var(--ink); font-size:12.5px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:6px;
+    box-shadow:0 6px 16px rgba(212,168,67,0.28);
   }
-  .prod-add:active{ transform:scale(0.96); }
+  .prod-add:active{ transform:scale(0.95); }
   .qty-row{ display:flex; align-items:center; justify-content:space-between; gap:4px; margin-top:auto; }
-  .qty-btn{ width:32px; height:32px; border-radius:8px; background:var(--ink-3); color:var(--cream); font-size:16px; font-weight:700; display:flex; align-items:center; justify-content:center; }
-  .qty-num{ font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:600; min-width:20px; text-align:center; }
+  .qty-btn{ width:34px; height:34px; border-radius:9px; background:var(--ink-3); color:var(--gold-light); font-size:17px; font-weight:700; display:flex; align-items:center; justify-content:center; border:1px solid rgba(212,168,67,0.25); }
+  .qty-num{ font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:700; min-width:20px; text-align:center; }
 
-  .empty-state{ text-align:center; padding:80px 20px; color:var(--stone); }
+  .empty-state{ text-align:center; padding:80px 20px; color:var(--stone); grid-column:1/-1; }
 
   .cart-fab{
     position:fixed; right:18px; bottom:20px; z-index:60;
-    width:60px; height:60px; border-radius:50%; background:var(--blue); color:#fff;
-    display:flex; align-items:center; justify-content:center; box-shadow:0 10px 28px rgba(91,132,217,0.45);
+    width:62px; height:62px; border-radius:50%;
+    background:linear-gradient(135deg, var(--gold-light), var(--gold));
+    color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 10px 28px rgba(212,168,67,0.5);
+    animation:fabPulse 2.6s ease-in-out infinite;
   }
-  .cart-fab svg{ width:24px; height:24px; stroke:#fff; }
+  @keyframes fabPulse{
+    0%,100%{ box-shadow:0 10px 28px rgba(212,168,67,0.45), 0 0 0 0 rgba(212,168,67,0.3); }
+    50%{ box-shadow:0 10px 28px rgba(212,168,67,0.45), 0 0 0 9px rgba(212,168,67,0); }
+  }
+  .cart-fab svg{ width:25px; height:25px; stroke:var(--ink); }
   .cart-fab .badge{
     position:absolute; top:-4px; right:-4px; background:var(--green); color:#fff; font-size:11px; font-weight:800;
-    min-width:20px; height:20px; border-radius:999px; display:flex; align-items:center; justify-content:center; padding:0 4px;
+    min-width:21px; height:21px; border-radius:999px; display:flex; align-items:center; justify-content:center; padding:0 4px;
+    border:2px solid var(--ink);
   }
   .cart-fab.hide{ display:none; }
 
-  .sheet-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; opacity:0; pointer-events:none; transition:.25s; }
+  .sheet-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:100; opacity:0; pointer-events:none; transition:.25s; }
   .sheet-overlay.show{ opacity:1; pointer-events:auto; }
   .sheet{
-    position:fixed; left:0; right:0; bottom:0; z-index:101; background:var(--ink-2); border-radius:22px 22px 0 0;
-    padding:10px 18px 26px; max-height:82vh; overflow-y:auto; transform:translateY(100%); transition:transform .32s cubic-bezier(.22,.61,.36,1);
+    position:fixed; left:0; right:0; bottom:0; z-index:101; background:var(--ink-2); border-radius:24px 24px 0 0;
+    padding:10px 18px 26px; max-height:86vh; overflow-y:auto; transform:translateY(100%); transition:transform .32s cubic-bezier(.22,.61,.36,1);
+    border-top:1px solid rgba(212,168,67,0.2);
   }
   .sheet.show{ transform:translateY(0); }
-  .sheet-handle{ width:36px; height:4px; background:rgba(244,238,225,0.2); border-radius:4px; margin:4px auto 16px; }
+  .sheet-handle{ width:38px; height:4px; background:rgba(212,168,67,0.35); border-radius:4px; margin:5px auto 16px; }
   .sheet h3{ font-family:'Fraunces',serif; font-size:19px; font-weight:700; margin-bottom:16px; }
 
+  #detailPhoto{ width:100%; aspect-ratio:1; object-fit:cover; border-radius:16px; margin-bottom:16px; }
+  #detailName{ font-family:'Fraunces',serif; font-size:21px; font-weight:700; margin-bottom:6px; }
+  #detailPrice{ font-family:'IBM Plex Mono',monospace; font-size:17px; color:var(--gold-light); font-weight:700; margin-bottom:12px; }
+  #detailDesc{ font-size:13.5px; color:var(--stone); line-height:1.6; margin-bottom:20px; }
+  .detail-add-btn{
+    width:100%; height:50px; border-radius:12px; font-size:15px; font-weight:800;
+    background:linear-gradient(135deg, var(--gold-light), var(--gold)); color:var(--ink);
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    box-shadow:0 8px 22px rgba(212,168,67,0.35);
+  }
+  .detail-add-btn:active{ transform:scale(0.97); }
+  .detail-qty-row{ display:flex; align-items:center; justify-content:center; gap:18px; margin-bottom:16px; }
+  .detail-qty-row .qty-btn{ width:40px; height:40px; }
+  .detail-qty-row .qty-num{ font-size:18px; }
+  .detail-close{ position:absolute; top:14px; right:16px; width:32px; height:32px; border-radius:50%; background:var(--ink-3); display:flex; align-items:center; justify-content:center; z-index:2; }
+  .detail-close svg{ width:15px; height:15px; stroke:var(--cream); }
+
   .cart-item{ display:flex; gap:12px; align-items:center; padding:11px 0; border-bottom:1px solid rgba(244,238,225,0.08); }
-  .cart-item img{ width:48px; height:48px; border-radius:8px; object-fit:cover; flex-shrink:0; }
+  .cart-item img{ width:50px; height:50px; border-radius:9px; object-fit:cover; flex-shrink:0; }
   .cart-item-info{ flex:1; min-width:0; }
-  .cart-item-name{ font-size:13.5px; font-weight:600; }
+  .cart-item-name{ font-size:13.5px; font-weight:700; }
   .cart-item-price{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--stone); margin-top:2px; }
   .cart-item-qty{ display:flex; align-items:center; gap:8px; }
-  .cart-item-qty button{ width:26px; height:26px; border-radius:7px; background:var(--ink-3); color:var(--cream); font-size:14px; }
+  .cart-item-qty button{ width:27px; height:27px; border-radius:8px; background:var(--ink-3); color:var(--gold-light); font-size:14px; border:1px solid rgba(212,168,67,0.2); }
   .cart-item-rm{ color:#E88F76; font-size:11px; margin-top:4px; }
 
-  .cart-total-row{ display:flex; justify-content:space-between; align-items:center; padding:16px 0; font-family:'Fraunces',serif; font-size:19px; font-weight:700; }
-  .cart-total-row span:last-child{ font-family:'IBM Plex Mono',monospace; color:var(--blue); }
-  .btn-order{ width:100%; height:52px; border-radius:12px; background:var(--green); color:#fff; font-size:15px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .cart-total-row{ display:flex; justify-content:space-between; align-items:center; padding:16px 0; font-family:'Fraunces',serif; font-size:20px; font-weight:700; }
+  .cart-total-row span:last-child{ font-family:'IBM Plex Mono',monospace; color:var(--gold-light); }
+  .btn-order{ width:100%; height:54px; border-radius:13px; background:linear-gradient(135deg, #4bbf6c, var(--green)); color:#fff; font-size:15px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:9px; box-shadow:0 8px 22px rgba(62,163,92,0.35); }
+  .btn-order:active{ transform:scale(0.97); }
   .cart-empty{ text-align:center; padding:40px 0; color:var(--stone); font-size:13.5px; }
 
   .toast{
     position:fixed; left:50%; bottom:100px; transform:translateX(-50%) translateY(20px); background:var(--ink-3);
     color:var(--cream); padding:12px 18px; border-radius:12px; font-size:13px; font-weight:600; z-index:200;
-    opacity:0; transition:.25s; pointer-events:none;
+    opacity:0; transition:.25s; pointer-events:none; border:1px solid rgba(212,168,67,0.25);
   }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 </style>
@@ -103,6 +401,7 @@
 
 <header>
   <div class="brand">EDELUXE</div>
+  <div class="brand-rule"></div>
   <div class="tagline">Accessoires électriques — Abidjan</div>
 </header>
 
@@ -113,9 +412,27 @@
 </main>
 
 <button class="cart-fab hide" id="cartFab">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
   <span class="badge" id="cartBadge">0</span>
 </button>
+
+<div class="sheet-overlay" id="detailOverlay"></div>
+<div class="sheet" id="detailSheet" style="position:relative;">
+  <div class="sheet-handle"></div>
+  <button class="detail-close" id="detailClose">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+  <img id="detailPhoto" src="" alt="">
+  <div id="detailName"></div>
+  <div id="detailPrice"></div>
+  <div id="detailDesc"></div>
+  <div class="detail-qty-row">
+    <button class="qty-btn" id="detailDec">−</button>
+    <span class="qty-num" id="detailQty">0</span>
+    <button class="qty-btn" id="detailInc">+</button>
+  </div>
+  <button class="detail-add-btn" id="detailAddBtn">Ajouter au panier</button>
+</div>
 
 <div class="sheet-overlay" id="cartOverlay"></div>
 <div class="sheet" id="cartSheet">
@@ -139,6 +456,7 @@ const WHATSAPP_NUMBER = '2250100385730';
 let produits = [];
 let cart = {};
 let activeCategory = 'Tous';
+let detailProductId = null;
 
 function escapeHtml(s){ return String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function fmt(n){ return Math.round(n).toLocaleString('fr-FR') + ' FCFA'; }
@@ -152,7 +470,8 @@ onSnapshot(q, (snap) => {
 });
 
 function renderCategories(){
-  const cats = ['Tous', ...new Set(produits.map(p => p.categorie || 'Autre'))];
+  const visibleProduits = produits.filter(p => p.disponible !== false);
+  const cats = ['Tous', ...new Set(visibleProduits.map(p => p.categorie || 'Autre'))];
   const wrap = document.getElementById('catScroll');
   wrap.innerHTML = '';
   cats.forEach(c => {
@@ -166,9 +485,12 @@ function renderCategories(){
 
 function renderGrid(){
   const grid = document.getElementById('prodGrid');
-  const filtered = produits.filter(p => activeCategory==='Tous' || (p.categorie||'Autre')===activeCategory);
+  const filtered = produits.filter(p =>
+    p.disponible !== false &&
+    (activeCategory==='Tous' || (p.categorie||'Autre')===activeCategory)
+  );
   if(filtered.length===0){
-    grid.parentElement.innerHTML = '<div class="empty-state">Aucun produit disponible pour le moment.<br>Repassez bientôt !</div>';
+    grid.innerHTML = '<div class="empty-state">Aucun produit disponible pour le moment.<br>Repassez bientôt !</div>';
     return;
   }
   grid.innerHTML = '';
@@ -177,43 +499,63 @@ function renderGrid(){
     card.className = 'prod-card';
     card.style.animationDelay = (i*0.03)+'s';
     const qty = cart[p.id] || 0;
-    const disponible = p.disponible !== false;
     card.innerHTML = `
-      <div class="prod-photo-wrap">
+      <div class="prod-photo-wrap" data-open="${p.id}">
         <img class="prod-photo" src="${p.photo||''}" alt="${escapeHtml(p.nom)}">
-        ${!disponible ? '<div class="prod-badge-rupture">Rupture de stock</div>' : ''}
       </div>
       <div class="prod-body">
-        <div class="prod-name">${escapeHtml(p.nom)}</div>
-        <div class="prod-price">${fmt(p.prix)}</div>
+        <div class="prod-name" data-open="${p.id}">${escapeHtml(p.nom)}</div>
+        ${p.description ? `<div class="prod-desc-line">${escapeHtml(p.description)}</div>` : ''}
+        <div class="prod-price-chip">${fmt(p.prix)}</div>
         <div class="add-zone"></div>
       </div>
     `;
+    card.querySelectorAll('[data-open]').forEach(el => { el.onclick = () => openDetail(p.id); });
     const addZone = card.querySelector('.add-zone');
-    if(disponible){
-      if(qty > 0){
-        addZone.innerHTML = `
-          <div class="qty-row">
-            <button class="qty-btn" data-action="dec">−</button>
-            <span class="qty-num">${qty}</span>
-            <button class="qty-btn" data-action="inc">+</button>
-          </div>`;
-        addZone.querySelector('[data-action=dec]').onclick = () => changeQty(p.id, -1);
-        addZone.querySelector('[data-action=inc]').onclick = () => changeQty(p.id, 1);
-      } else {
-        addZone.innerHTML = `<button class="prod-add">Ajouter</button>`;
-        addZone.querySelector('.prod-add').onclick = () => changeQty(p.id, 1);
-      }
+    if(qty > 0){
+      addZone.innerHTML = `<div class="qty-row"><button class="qty-btn" data-action="dec">−</button><span class="qty-num">${qty}</span><button class="qty-btn" data-action="inc">+</button></div>`;
+      addZone.querySelector('[data-action=dec]').onclick = (e) => { e.stopPropagation(); changeQty(p.id, -1); };
+      addZone.querySelector('[data-action=inc]').onclick = (e) => { e.stopPropagation(); changeQty(p.id, 1); };
+    } else {
+      addZone.innerHTML = `<button class="prod-add">Ajouter</button>`;
+      addZone.querySelector('.prod-add').onclick = (e) => { e.stopPropagation(); changeQty(p.id, 1); };
     }
     grid.appendChild(card);
   });
 }
 
+const detailOverlay = document.getElementById('detailOverlay');
+const detailSheet = document.getElementById('detailSheet');
+
+function openDetail(id){
+  const p = produits.find(x => x.id === id);
+  if(!p) return;
+  detailProductId = id;
+  document.getElementById('detailPhoto').src = p.photo || '';
+  document.getElementById('detailName').textContent = p.nom;
+  document.getElementById('detailPrice').textContent = fmt(p.prix);
+  document.getElementById('detailDesc').textContent = p.description || '';
+  document.getElementById('detailDesc').style.display = p.description ? 'block' : 'none';
+  refreshDetailQty();
+  detailOverlay.classList.add('show');
+  detailSheet.classList.add('show');
+}
+function closeDetail(){
+  detailOverlay.classList.remove('show');
+  detailSheet.classList.remove('show');
+}
+detailOverlay.onclick = closeDetail;
+document.getElementById('detailClose').onclick = closeDetail;
+
+function refreshDetailQty(){ document.getElementById('detailQty').textContent = cart[detailProductId] || 0; }
+document.getElementById('detailInc').onclick = () => { changeQty(detailProductId, 1); refreshDetailQty(); };
+document.getElementById('detailDec').onclick = () => { changeQty(detailProductId, -1); refreshDetailQty(); };
+document.getElementById('detailAddBtn').onclick = () => { changeQty(detailProductId, 1); refreshDetailQty(); };
+
 function changeQty(id, delta){
   const current = cart[id] || 0;
   const next = Math.max(0, current + delta);
-  if(next === 0) delete cart[id];
-  else cart[id] = next;
+  if(next === 0) delete cart[id]; else cart[id] = next;
   renderGrid();
   updateCartFab();
   renderCartSheet();
