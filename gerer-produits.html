@@ -18,11 +18,13 @@
   h1{ font-family:'Fraunces',serif; font-weight:600; font-size:24px; margin-bottom:22px; }
   h2{ font-family:'Fraunces',serif; font-weight:600; font-size:17px; margin:30px 0 14px; }
   label{ display:block; font-size:12.5px; color:var(--stone); margin-bottom:6px; margin-top:14px; }
-  input[type=text], input[type=number]{
-    width:100%; height:44px; background:var(--ink-2); border:1px solid rgba(244,238,225,0.15);
-    border-radius:10px; padding:0 13px; color:var(--cream); font-family:'Manrope',sans-serif; font-size:14px;
+  input[type=text], input[type=number], textarea{
+    width:100%; background:var(--ink-2); border:1px solid rgba(244,238,225,0.15);
+    border-radius:10px; padding:11px 13px; color:var(--cream); font-family:'Manrope',sans-serif; font-size:14px;
   }
-  input:focus{ outline:none; border-color:var(--blue); }
+  input[type=text], input[type=number]{ height:44px; padding:0 13px; }
+  textarea{ resize:vertical; }
+  input:focus, textarea:focus{ outline:none; border-color:var(--blue); }
   .row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   .photo-btn{
     margin-top:6px; width:100%; height:44px; background:var(--ink-2); border:1px dashed rgba(244,238,225,0.25);
@@ -31,7 +33,7 @@
   }
   #photoPreview{ margin-top:10px; display:none; }
   #photoPreview img{ width:100%; max-height:180px; object-fit:cover; border-radius:10px; }
-  .switch-row{ display:flex; align-items:center; justify-content:space-between; margin-top:16px; padding:12px 14px; background:var(--ink-2); border-radius:10px; }
+  .switch-row{ display:flex; align-items:center; justify-content:space-between; margin-top:16px; padding:12px 14px; background:var(--ink-2); border-radius:10px; gap:12px; }
   .switch{ width:42px; height:24px; border-radius:999px; background:rgba(244,238,225,0.2); position:relative; flex-shrink:0; }
   .switch.on{ background:var(--green); }
   .switch .knob{ width:18px; height:18px; border-radius:50%; background:#fff; position:absolute; top:3px; left:3px; transition:.2s; }
@@ -76,13 +78,16 @@
   </div>
 </div>
 
+<label>Description (optionnel)</label>
+<textarea id="fDescription" rows="3" placeholder="Ex. Gants en cuir renforcé, isolation jusqu'à 1000V, taille unique."></textarea>
+
 <label>Photo du produit</label>
 <input type="file" id="fPhotoInput" accept="image/*" style="display:none;">
 <div class="photo-btn" id="fPhotoBtn">📷 Choisir une photo</div>
 <div id="photoPreview"><img id="photoPreviewImg" alt=""></div>
 
 <div class="switch-row">
-  <span style="font-size:13px;">Disponible à la vente</span>
+  <span style="font-size:13px;">Disponible à la vente <span style="color:var(--stone); font-weight:400; display:block; font-size:11.5px; margin-top:2px;">Désactivé = masqué du client (jamais supprimé)</span></span>
   <div class="switch on" id="fDispo"><div class="knob"></div></div>
 </div>
 
@@ -139,6 +144,7 @@ function resetForm(){
   document.getElementById('fNom').value = '';
   document.getElementById('fPrix').value = '';
   document.getElementById('fCategorie').value = '';
+  document.getElementById('fDescription').value = '';
   document.getElementById('photoPreview').style.display = 'none';
   fDispo.classList.add('on');
   document.getElementById('btnSave').textContent = 'Ajouter le produit';
@@ -149,11 +155,12 @@ document.getElementById('btnSave').onclick = async () => {
   const nom = document.getElementById('fNom').value.trim();
   const prix = parseFloat(document.getElementById('fPrix').value);
   const categorie = document.getElementById('fCategorie').value.trim() || 'Autre';
+  const description = document.getElementById('fDescription').value.trim();
   const disponible = fDispo.classList.contains('on');
 
   if(!nom || !prix){ alert('Merci de renseigner au moins le nom et le prix.'); return; }
 
-  const data = { nom, prix, categorie, disponible };
+  const data = { nom, prix, categorie, description, disponible };
   if(photoData) data.photo = photoData;
 
   try{
@@ -171,13 +178,14 @@ document.getElementById('btnSave').onclick = async () => {
 
 document.getElementById('btnCancelEdit').onclick = resetForm;
 
-window.editProduit = function(id, nom, prix, categorie, disponible, photo){
+window.editProduit = function(id, nom, prix, categorie, description, disponible, photo){
   editingId = id;
   photoData = photo || null;
   document.getElementById('formTitle').textContent = 'Modifier le produit';
   document.getElementById('fNom').value = nom;
   document.getElementById('fPrix').value = prix;
   document.getElementById('fCategorie').value = categorie;
+  document.getElementById('fDescription').value = description || '';
   if(photo){
     document.getElementById('photoPreview').style.display = 'block';
     document.getElementById('photoPreviewImg').src = photo;
@@ -212,20 +220,21 @@ onSnapshot(q, (snap) => {
     const photoSafe = (p.photo||'').replace(/'/g, "\\'");
     const nomSafe = (p.nom||'').replace(/'/g, "\\'");
     const catSafe = (p.categorie||'').replace(/'/g, "\\'");
+    const descSafe = (p.description||'').replace(/'/g, "\\'").replace(/\n/g, ' ');
     card.innerHTML = `
       <img src="${p.photo||''}" alt="">
       <div class="prod-info">
-        <div class="prod-name">${p.nom}<span class="prod-badge ${p.disponible?'on':'off'}">${p.disponible?'Dispo':'Rupture'}</span></div>
+        <div class="prod-name">${p.nom}<span class="prod-badge ${p.disponible?'on':'off'}">${p.disponible?'Dispo':'Masqué'}</span></div>
         <div class="prod-meta">${(p.prix||0).toLocaleString('fr-FR')} FCFA · ${p.categorie||'—'}</div>
       </div>
       <div class="prod-actions">
-        <button class="icon-btn" onclick="toggleDispo('${d.id}', ${p.disponible})" title="Basculer disponibilité">
+        <button class="icon-btn" onclick="toggleDispo('${d.id}', ${p.disponible})" title="Afficher/masquer côté client">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12A10 10 0 1 1 12 2"/><path d="M22 2 12 12"/></svg>
         </button>
-        <button class="icon-btn" onclick="editProduit('${d.id}','${nomSafe}',${p.prix},'${catSafe}',${p.disponible},'${photoSafe}')" title="Modifier">
+        <button class="icon-btn" onclick="editProduit('${d.id}','${nomSafe}',${p.prix},'${catSafe}','${descSafe}',${p.disponible},'${photoSafe}')" title="Modifier">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
         </button>
-        <button class="icon-btn" onclick="supprimerProduit('${d.id}')" title="Supprimer">
+        <button class="icon-btn" onclick="supprimerProduit('${d.id}')" title="Supprimer définitivement">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
         </button>
       </div>
