@@ -55,6 +55,13 @@
   .icon-btn svg{ width:15px; height:15px; stroke:var(--cream); }
   .empty{ text-align:center; color:var(--stone); font-size:13px; padding:30px 0; }
   a.storelink{ color:var(--blue); font-size:13px; }
+
+  .cat-row{ display:flex; align-items:center; gap:10px; background:var(--ink-2); border-radius:10px; padding:10px 12px; margin-bottom:8px; }
+  .cat-row input{ flex:1; background:transparent; border:none; color:var(--cream); font-family:'Manrope',sans-serif; font-size:14px; font-weight:600; height:32px; padding:0; }
+  .cat-row input:focus{ outline:none; border-bottom:1px solid var(--blue); }
+  .cat-count{ font-size:11.5px; color:var(--stone); flex-shrink:0; }
+  .cat-del{ width:30px; height:30px; border-radius:8px; background:var(--ink-3); display:flex; align-items:center; justify-content:center; border:none; cursor:pointer; flex-shrink:0; }
+  .cat-del svg{ width:14px; height:14px; stroke:#E88F76; }
 </style>
 </head>
 <body>
@@ -93,6 +100,10 @@
 
 <button class="btn btn-primary" id="btnSave">Ajouter le produit</button>
 <button class="btn btn-ghost" id="btnCancelEdit" style="display:none;">Annuler la modification</button>
+
+<h2>Mes catégories</h2>
+<p style="font-size:12px; color:var(--stone); margin-bottom:12px;">Renomme une catégorie (tous les produits concernés suivent automatiquement) ou supprime-la (ses produits passent en « Autre »).</p>
+<div id="catManageList"><div class="empty">Aucune catégorie pour le moment.</div></div>
 
 <h2>Tes produits</h2>
 <div id="prodList"><div class="empty">Chargement...</div></div>
@@ -205,8 +216,59 @@ window.toggleDispo = async function(id, current){
   await updateDoc(doc(db, "produits", id), { disponible: !current });
 };
 
+
+function renderCategoryManager(){
+  const wrap = document.getElementById('catManageList');
+  const counts = {};
+  currentProducts.forEach(p => {
+    const c = p.categorie || 'Autre';
+    counts[c] = (counts[c] || 0) + 1;
+  });
+  const names = Object.keys(counts).sort();
+  if(names.length === 0){
+    wrap.innerHTML = '<div class="empty">Aucune catégorie pour le moment.</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  names.forEach(name => {
+    const row = document.createElement('div');
+    row.className = 'cat-row';
+    row.innerHTML = `
+      <input type="text" value="${name.replace(/"/g,'&quot;')}">
+      <span class="cat-count">${counts[name]} produit${counts[name]>1?'s':''}</span>
+      <button class="cat-del" title="Supprimer cette catégorie">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      </button>
+    `;
+    const input = row.querySelector('input');
+    const commitRename = async () => {
+      const newName = input.value.trim();
+      if(!newName || newName === name){ input.value = name; return; }
+      const affected = currentProducts.filter(p => (p.categorie||'Autre') === name);
+      for(const p of affected){
+        await updateDoc(doc(db, "produits", p.id), { categorie: newName });
+      }
+    };
+    input.onblur = commitRename;
+    input.onkeydown = (e) => { if(e.key === 'Enter'){ e.preventDefault(); input.blur(); } };
+    row.querySelector('.cat-del').onclick = async () => {
+      if(name === 'Autre'){ alert('La catégorie « Autre » est la catégorie par défaut, elle ne peut pas être supprimée.'); return; }
+      if(!confirm(`Supprimer la catégorie « ${name} » ? Ses ${counts[name]} produit(s) passeront dans « Autre ».`)) return;
+      const affected = currentProducts.filter(p => (p.categorie||'Autre') === name);
+      for(const p of affected){
+        await updateDoc(doc(db, "produits", p.id), { categorie: 'Autre' });
+      }
+    };
+    wrap.appendChild(row);
+  });
+}
+
+let currentProducts = [];
 const q = query(collection(db, "produits"), orderBy("createdAt", "desc"));
 onSnapshot(q, (snap) => {
+  currentProducts = [];
+  snap.forEach(d => currentProducts.push({ id: d.id, ...d.data() }));
+  renderCategoryManager();
   const list = document.getElementById('prodList');
   if(snap.empty){
     list.innerHTML = '<div class="empty">Aucun produit pour le moment.</div>';
