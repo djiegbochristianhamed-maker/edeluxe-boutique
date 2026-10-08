@@ -56,6 +56,12 @@
   @keyframes cardIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
   .prod-photo-wrap{ position:relative; cursor:pointer; }
   .prod-photo{ width:100%; aspect-ratio:1; object-fit:cover; background:var(--ink-3); display:block; }
+  .zoom-hint{
+    position:absolute; bottom:8px; right:8px; width:26px; height:26px; border-radius:50%;
+    background:rgba(18,15,10,0.65); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center;
+    border:1px solid rgba(244,238,225,0.25);
+  }
+  .zoom-hint svg{ width:13px; height:13px; stroke:var(--gold-light); }
   .prod-body{ padding:12px 13px 14px; display:flex; flex-direction:column; gap:6px; flex:1; }
   .prod-name{ font-size:13.5px; font-weight:700; line-height:1.3; cursor:pointer; }
   .prod-desc-line{ font-size:11.5px; color:var(--stone); line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
@@ -254,6 +260,7 @@ function renderGrid(){
     card.innerHTML = `
       <div class="prod-photo-wrap" data-open="${p.id}">
         <img class="prod-photo" src="${p.photo||''}" alt="${escapeHtml(p.nom)}">
+        <div class="zoom-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg></div>
       </div>
       <div class="prod-body">
         <div class="prod-name" data-open="${p.id}">${escapeHtml(p.nom)}</div>
