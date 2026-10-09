@@ -4,9 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EDELUXE — Boutique</title>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap"></noscript>
 <style>
   :root{
     --ink:#120F0A; --ink-2:#1C1712; --ink-3:#292219; --cream:#F4EEE1; --stone:#9C9686;
@@ -153,6 +157,12 @@
     opacity:0; transition:.25s; pointer-events:none; border:1px solid rgba(212,168,67,0.25);
   }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  .skel-card{ background:var(--ink-2); border-radius:18px; overflow:hidden; border:1px solid rgba(244,238,225,0.06); }
+  .skel-img{ aspect-ratio:1; background:linear-gradient(100deg, var(--ink-3) 30%, #3a2f22 50%, var(--ink-3) 70%); background-size:200% 100%; animation:shimmer 1.3s infinite linear; }
+  .skel-line{ height:11px; border-radius:6px; margin:13px 13px 0; background:var(--ink-3); }
+  .skel-line.short{ width:45%; margin-bottom:16px; }
+  @keyframes shimmer{ from{ background-position:200% 0; } to{ background-position:-200% 0; } }
 </style>
 </head>
 <body>
@@ -166,7 +176,7 @@
 <div class="cat-scroll" id="catScroll"></div>
 
 <main>
-  <div class="grid" id="prodGrid"></div>
+  <div class="grid" id="prodGrid"><div class="skel-card"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line short"></div></div><div class="skel-card"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line short"></div></div><div class="skel-card"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line short"></div></div><div class="skel-card"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line short"></div></div></div>
 </main>
 
 <button class="cart-fab hide" id="cartFab">
@@ -206,8 +216,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script type="module">
-import { db, collection, onSnapshot, query, orderBy } from "./firebase-config.js";
+<script>
 
 const WHATSAPP_NUMBER = '2250100385730';
 
@@ -219,13 +228,28 @@ let detailProductId = null;
 function escapeHtml(s){ return String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function fmt(n){ return Math.round(n).toLocaleString('fr-FR') + ' FCFA'; }
 
-const q = query(collection(db, "produits"), orderBy("createdAt", "desc"));
-onSnapshot(q, (snap) => {
-  produits = [];
-  snap.forEach(d => produits.push({ id: d.id, ...d.data() }));
+const CACHE_KEY = 'edx_produits_cache_v1';
+window.edxSetProducts = function(arr){
+  produits = arr;
+  try{ localStorage.setItem(CACHE_KEY, JSON.stringify(arr)); }catch(e){ /* stockage plein : pas grave */ }
   renderCategories();
   renderGrid();
-});
+};
+window.edxLoadError = function(err){
+  if(produits.length === 0){
+    document.getElementById('prodGrid').innerHTML =
+      '<div class="empty-state">Impossible de charger les produits pour le moment.<br>Vérifie ta connexion puis recharge la page.</div>';
+  }
+};
+// Affichage immédiat des produits vus la dernière fois, sans attendre le réseau
+try{
+  const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+  if(Array.isArray(cached) && cached.length){
+    produits = cached;
+    renderCategories();
+    renderGrid();
+  }
+}catch(e){}
 
 function renderCategories(){
   const visibleProduits = produits.filter(p => p.disponible !== false);
@@ -406,6 +430,24 @@ function showToast(msg){
   clearTimeout(toastTimer);
   toastTimer = setTimeout(()=> t.classList.remove('show'), 1800);
 }
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+const db = getFirestore(initializeApp({
+  apiKey: "AIzaSyABGcy1V-Js9tcxypAO-c7YhMyWDx41ROA",
+  authDomain: "perfect-services-sgi.firebaseapp.com",
+  projectId: "perfect-services-sgi",
+  storageBucket: "perfect-services-sgi.firebasestorage.app",
+  messagingSenderId: "942617089118",
+  appId: "1:942617089118:web:a65f5ff973a0ef441690cf"
+}));
+const q = query(collection(db, "produits"), orderBy("createdAt", "desc"));
+onSnapshot(q, (snap) => {
+  const arr = [];
+  snap.forEach(d => arr.push({ id: d.id, ...d.data() }));
+  window.edxSetProducts(arr);
+}, (err) => window.edxLoadError(err));
 </script>
 </body>
 </html>

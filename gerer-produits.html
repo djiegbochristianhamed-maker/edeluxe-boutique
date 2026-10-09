@@ -4,9 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EDELUXE — Gestion des produits</title>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap"></noscript>
 <style>
   :root{
     --ink:#15130E; --ink-2:#1D1A13; --ink-3:#262119; --cream:#F4EEE1; --stone:#9C9686; --blue:#5B84D9; --green:#3EA35C; --red:#D9694F;
@@ -114,7 +118,16 @@
 </p>
 
 <script type="module">
-import { db, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from "./firebase-config.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+const db = getFirestore(initializeApp({
+  apiKey: "AIzaSyABGcy1V-Js9tcxypAO-c7YhMyWDx41ROA",
+  authDomain: "perfect-services-sgi.firebaseapp.com",
+  projectId: "perfect-services-sgi",
+  storageBucket: "perfect-services-sgi.firebasestorage.app",
+  messagingSenderId: "942617089118",
+  appId: "1:942617089118:web:a65f5ff973a0ef441690cf"
+}));
 
 let editingId = null;
 let photoData = null;
@@ -303,6 +316,8 @@ onSnapshot(q, (snap) => {
     `;
     list.appendChild(card);
   });
+}, (err) => {
+  document.getElementById('prodList').innerHTML = '<div class="empty">Impossible de charger : ' + ((err && err.message) ? err.message : 'erreur de connexion') + '</div>';
 });
 </script>
 </body>
