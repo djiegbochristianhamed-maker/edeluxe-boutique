@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EDELUXE — Boutique</title>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap"></noscript>
+<style>
+  :root{
+    --ink:#120F0A; --ink-2:#1C1712; --ink-3:#292219; --cream:#F4EEE1; --stone:#9C9686;
+    --gold:#D4A843; --gold-light:#EAC873; --gold-dark:#A67C2E;
+    --blue:#5B84D9; --green:#3EA35C;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html,body{ min-height:100%; background:var(--ink); }
+  body{
+    font-family:'Manrope',sans-serif; color:var(--cream); line-height:1.5; padding-bottom:100px;
+    background:
+      radial-gradient(ellipse 700px 380px at 50% -8%, rgba(212,168,67,0.12), transparent),
+      var(--ink);
+  }
+  button{ font-family:inherit; cursor:pointer; border:none; }
+
+  header{ padding:30px 20px 20px; text-align:center; position:relative; }
+  .brand{
+    font-family:'Fraunces',serif; font-weight:800; font-size:30px; letter-spacing:.04em;
+    background:linear-gradient(135deg, var(--gold-light), var(--gold) 55%, var(--gold-dark));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .brand-rule{ width:46px; height:2px; background:linear-gradient(90deg, transparent, var(--gold), transparent); margin:9px auto 10px; }
+  .tagline{ font-size:12.5px; color:var(--stone); letter-spacing:.02em; }
+
+  .cat-scroll{ display:flex; gap:9px; overflow-x:auto; padding:14px 20px 20px; scrollbar-width:none; }
+  .cat-scroll::-webkit-scrollbar{ display:none; }
+  .cat-chip{
+    flex-shrink:0; padding:9px 17px; border-radius:999px; background:var(--ink-2);
+    border:1px solid rgba(244,238,225,0.1); font-size:12.5px; font-weight:700; color:var(--stone);
+    transition:.2s ease;
+  }
+  .cat-chip.active{
+    background:linear-gradient(135deg, var(--gold-light), var(--gold));
+    color:var(--ink); border-color:transparent; box-shadow:0 4px 14px rgba(212,168,67,0.35);
+  }
+
+  main{ padding:0 16px; max-width:640px; margin:0 auto; }
+  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .prod-card{
+    background:var(--ink-2); border-radius:18px; overflow:hidden;
+    display:flex; flex-direction:column; animation:cardIn .4s ease both;
+    border:1px solid rgba(244,238,225,0.06);
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .prod-card:active{ transform:scale(0.97); }
+  @keyframes cardIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  .prod-photo-wrap{ position:relative; cursor:pointer; }
+  .prod-photo{ width:100%; aspect-ratio:1; object-fit:cover; background:var(--ink-3); display:block; }
+  .zoom-hint{
+    position:absolute; bottom:8px; right:8px; width:26px; height:26px; border-radius:50%;
+    background:rgba(18,15,10,0.65); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center;
+    border:1px solid rgba(244,238,225,0.25);
+  }
+  .zoom-hint svg{ width:13px; height:13px; stroke:var(--gold-light); }
+  .prod-body{ padding:12px 13px 14px; display:flex; flex-direction:column; gap:6px; flex:1; }
+  .prod-name{ font-size:13.5px; font-weight:700; line-height:1.3; cursor:pointer; }
+  .prod-desc-line{ font-size:11.5px; color:var(--stone); line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .prod-price-chip{
+    display:inline-flex; align-self:flex-start; font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600;
+    color:var(--gold-light); background:rgba(212,168,67,0.12); border:1px solid rgba(212,168,67,0.3);
+    padding:4px 10px; border-radius:8px; margin-top:2px;
+  }
+  .prod-add{
+    margin-top:auto; height:38px; border-radius:10px;
+    background:linear-gradient(135deg, var(--gold-light), var(--gold));
+    color:var(--ink); font-size:12.5px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:6px;
+    box-shadow:0 6px 16px rgba(212,168,67,0.28);
+  }
+  .prod-add:active{ transform:scale(0.95); }
+  .qty-row{ display:flex; align-items:center; justify-content:space-between; gap:4px; margin-top:auto; }
+  .qty-btn{ width:34px; height:34px; border-radius:9px; background:var(--ink-3); color:var(--gold-light); font-size:17px; font-weight:700; display:flex; align-items:center; justify-content:center; border:1px solid rgba(212,168,67,0.25); }
+  .qty-num{ font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:700; min-width:20px; text-align:center; }
+
+  .empty-state{ text-align:center; padding:80px 20px; color:var(--stone); grid-column:1/-1; }
+
+  .cart-fab{
+    position:fixed; right:18px; bottom:20px; z-index:60;
+    width:62px; height:62px; border-radius:50%;
+    background:linear-gradient(135deg, var(--gold-light), var(--gold));
+    color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 10px 28px rgba(212,168,67,0.5);
+    animation:fabPulse 2.6s ease-in-out infinite;
+  }
+  @keyframes fabPulse{
+    0%,100%{ box-shadow:0 10px 28px rgba(212,168,67,0.45), 0 0 0 0 rgba(212,168,67,0.3); }
+    50%{ box-shadow:0 10px 28px rgba(212,168,67,0.45), 0 0 0 9px rgba(212,168,67,0); }
+  }
+  .cart-fab svg{ width:25px; height:25px; stroke:var(--ink); }
+  .cart-fab .badge{
+    position:absolute; top:-4px; right:-4px; background:var(--green); color:#fff; font-size:11px; font-weight:800;
+    min-width:21px; height:21px; border-radius:999px; display:flex; align-items:center; justify-content:center; padding:0 4px;
+    border:2px solid var(--ink);
+  }
+  .cart-fab.hide{ display:none; }
+
+  .sheet-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:100; opacity:0; pointer-events:none; transition:.25s; }
+  .sheet-overlay.show{ opacity:1; pointer-events:auto; }
+  .sheet{
+    position:fixed; left:0; right:0; bottom:0; z-index:101; background:var(--ink-2); border-radius:24px 24px 0 0;
+    padding:10px 18px 26px; max-height:86vh; overflow-y:auto; transform:translateY(100%); transition:transform .32s cubic-bezier(.22,.61,.36,1);
+    border-top:1px solid rgba(212,168,67,0.2);
+  }
+  .sheet.show{ transform:translateY(0); }
+  .sheet-handle{ width:38px; height:4px; background:rgba(212,168,67,0.35); border-radius:4px; margin:5px auto 16px; }
+  .sheet h3{ font-family:'Fraunces',serif; font-size:19px; font-weight:700; margin-bottom:16px; }
+
+  #detailPhoto{ width:100%; aspect-ratio:1; object-fit:cover; border-radius:16px; margin-bottom:16px; }
+  #detailName{ font-family:'Fraunces',serif; font-size:21px; font-weight:700; margin-bottom:6px; }
+  #detailPrice{ font-family:'IBM Plex Mono',monospace; font-size:17px; color:var(--gold-light); font-weight:700; margin-bottom:12px; }
+  #detailDesc{ font-size:13.5px; color:var(--stone); line-height:1.6; margin-bottom:20px; }
+  .detail-add-btn{
+    width:100%; height:50px; border-radius:12px; font-size:15px; font-weight:800;
+    background:linear-gradient(135deg, var(--gold-light), var(--gold)); color:var(--ink);
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    box-shadow:0 8px 22px rgba(212,168,67,0.35);
+  }
+  .detail-add-btn:active{ transform:scale(0.97); }
+  .detail-qty-row{ display:flex; align-items:center; justify-content:center; gap:18px; margin-bottom:16px; }
+  .detail-qty-row .qty-btn{ width:40px; height:40px; }
+  .detail-qty-row .qty-num{ font-size:18px; }
+  .detail-close{ position:absolute; top:14px; right:16px; width:32px; height:32px; border-radius:50%; background:var(--ink-3); display:flex; align-items:center; justify-content:center; z-index:2; }
+  .detail-close svg{ width:15px; height:15px; stroke:var(--cream); }
+
+  .cart-item{ display:flex; gap:12px; align-items:center; padding:11px 0; border-bottom:1px solid rgba(244,238,225,0.08); }
+  .cart-item img{ width:50px; height:50px; border-radius:9px; object-fit:cover; flex-shrink:0; }
+  .cart-item-info{ flex:1; min-width:0; }
+  .cart-item-name{ font-size:13.5px; font-weight:700; }
+  .cart-item-price{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--stone); margin-top:2px; }
+  .cart-item-qty{ display:flex; align-items:center; gap:8px; }
+  .cart-item-qty button{ width:27px; height:27px; border-radius:8px; background:var(--ink-3); color:var(--gold-light); font-size:14px; border:1px solid rgba(212,168,67,0.2); }
+  .cart-item-rm{ color:#E88F76; font-size:11px; margin-top:4px; }
+
+  .cart-total-row{ display:flex; justify-content:space-between; align-items:center; padding:16px 0; font-family:'Fraunces',serif; font-size:20px; font-weight:700; }
+  .cart-total-row span:last-child{ font-family:'IBM Plex Mono',monospace; color:var(--gold-light); }
+  .btn-order{ width:100%; height:54px; border-radius:13px; background:linear-gradient(135deg, #4bbf6c, var(--green)); color:#fff; font-size:15px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:9px; box-shadow:0 8px 22px rgba(62,163,92,0.35); }
+  .btn-order:active{ transform:scale(0.97); }
+  .cart-empty{ text-align:center; padding:40px 0; color:var(--stone); font-size:13.5px; }
+
+  .toast{
+    position:fixed; left:50%; bottom:100px; transform:translateX(-50%) translateY(20px); background:var(--ink-3);
+    color:var(--cream); padding:12px 18px; border-radius:12px; font-size:13px; font-weight:600; z-index:200;
+    opacity:0; transition:.25s; pointer-events:none; border:1px solid rgba(212,168,67,0.25);
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  .skel-card{ background:var(--ink-2); border-radius:18px; overflow:hidden; border:1px solid rgba(244,238,225,0.06); }
+  .skel-img{ aspect-ratio:1; background:linear-gradient(100deg, var(--ink-3) 30%, #3a2f22 50%, var(--ink-3) 70%); background-size:200% 100%; animation:shimmer 1.3s infinite linear; }
+  .skel-line{ height:11px; border-radius:6px; margin:13px 13px 0; background:var(--ink-3); }
+  .skel-line.short{ width:45%; margin-bottom:16px; }
+  @keyframes shimmer{ from{ background-position:200% 0; } to{ background-position:-200% 0; } }
+  .sync-note{ display:none; align-items:center; gap:8px; font-size:11.5px; color:var(--stone); padding:0 4px 12px; }
+  .sync-note.show{ display:flex; }
+  .sync-note::before{ content:''; width:7px; height:7px; border-radius:50%; background:var(--gold); animation:syncPulse 1.2s ease-in-out infinite; }
+  @keyframes syncPulse{ 0%,100%{ opacity:.25; } 50%{ opacity:1; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">EDELUXE</div>
+  <div class="brand-rule"></div>
+  <div class="tagline">Accessoires électriques — Abidjan</div>
+</header>
+
+<div class="cat-scroll" id="catScroll"></div>
+
+<main>
+  <div class="sync-note" id="syncNote">Actualisation des disponibilités…</div>
+  <div class="grid" id="prodGrid"><div class="skel-card"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line short"></div></div><div class="skel-card"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line short"></div></div><div class="skel-card"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line short"></div></div><div class="skel-card"><div class="skel-img"></div><div class="skel-line"></div><div class="skel-line short"></div></div></div>
+</main>
+
+<button class="cart-fab hide" id="cartFab">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+  <span class="badge" id="cartBadge">0</span>
+</button>
+
+<div class="sheet-overlay" id="detailOverlay"></div>
+<div class="sheet" id="detailSheet" style="position:relative;">
+  <div class="sheet-handle"></div>
+  <button class="detail-close" id="detailClose">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+  <img id="detailPhoto" src="" alt="">
+  <div id="detailName"></div>
+  <div id="detailPrice"></div>
+  <div id="detailDesc"></div>
+  <div class="detail-qty-row">
+    <button class="qty-btn" id="detailDec">−</button>
+    <span class="qty-num" id="detailQty">0</span>
+    <button class="qty-btn" id="detailInc">+</button>
+  </div>
+  <button class="detail-add-btn" id="detailAddBtn">Ajouter au panier</button>
+</div>
+
+<div class="sheet-overlay" id="cartOverlay"></div>
+<div class="sheet" id="cartSheet">
+  <div class="sheet-handle"></div>
+  <h3>Votre panier</h3>
+  <div id="cartItems"></div>
+  <div class="cart-total-row"><span>Total</span><span id="cartTotal">0 FCFA</span></div>
+  <button class="btn-order" id="btnOrder">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+    Commander sur WhatsApp
+  </button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+const WHATSAPP_NUMBER = '2250100385730';
+
+let produits = [];
+let cart = {};
+let activeCategory = 'Tous';
+let detailProductId = null;
+
+function escapeHtml(s){ return String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function fmt(n){ return Math.round(n).toLocaleString('fr-FR') + ' FCFA'; }
+
+const CACHE_KEY = 'edx_produits_cache_v2';
+let liveConfirmed = false;   // vrai dès que Firebase a répondu : seule la liste « en direct » fait foi
+window.edxSetProducts = function(arr){
+  produits = arr;
+  liveConfirmed = true;
+  try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), items: arr })); }catch(e){ /* stockage plein : pas grave */ }
+  const note = document.getElementById('syncNote'); if(note) note.classList.remove('show');
+  // un article masqué ou supprimé entre-temps ne peut pas rester dans le panier
+  let removed = 0;
+  Object.keys(cart).forEach(id => {
+    const p = produits.find(x => x.id === id);
+    if(!p || p.disponible === false){ delete cart[id]; removed++; }
+  });
+  renderCategories();
+  renderGrid();
+  updateCartFab();
+  renderCartSheet();
+  if(removed > 0) showToast("Un article n'est plus disponible : retiré de votre panier");
+};
+window.edxLoadError = function(err){
+  if(produits.length === 0){
+    document.getElementById('prodGrid').innerHTML =
+      '<div class="empty-state">Impossible de charger les produits pour le moment.<br>Vérifie ta connexion puis recharge la page.</div>';
+  } else {
+    const note = document.getElementById('syncNote');
+    if(note){ note.textContent = 'Connexion impossible — disponibilités non vérifiées'; note.classList.add('show'); }
+  }
+};
+// Affichage immédiat des produits vus la dernière fois (moins de 7 jours), en attendant la liste à jour
+try{
+  const raw = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+  const fresh = raw && Array.isArray(raw.items) && raw.items.length && (Date.now() - raw.t) < 7*24*3600*1000;
+  if(fresh){
+    produits = raw.items;
+    renderCategories();
+    renderGrid();
+    const note = document.getElementById('syncNote'); if(note) note.classList.add('show');
+  }
+}catch(e){}
+
+function renderCategories(){
+  const visibleProduits = produits.filter(p => p.disponible !== false);
+  const cats = ['Tous', ...new Set(visibleProduits.map(p => p.categorie || 'Autre'))];
+  const wrap = document.getElementById('catScroll');
+  wrap.innerHTML = '';
+  cats.forEach(c => {
+    const chip = document.createElement('button');
+    chip.className = 'cat-chip' + (c===activeCategory ? ' active':'');
+    chip.textContent = c;
+    chip.onclick = () => { activeCategory = c; renderCategories(); renderGrid(); };
+    wrap.appendChild(chip);
+  });
+}
+
+function renderGrid(){
+  const grid = document.getElementById('prodGrid');
+  const filtered = produits.filter(p =>
+    p.disponible !== false &&
+    (activeCategory==='Tous' || (p.categorie||'Autre')===activeCategory)
+  );
+  if(filtered.length===0){
+    grid.innerHTML = '<div class="empty-state">Aucun produit disponible pour le moment.<br>Repassez bientôt !</div>';
+    return;
+  }
+  grid.innerHTML = '';
+  filtered.forEach((p, i) => {
+    const card = document.createElement('div');
+    card.className = 'prod-card';
+    card.style.animationDelay = (i*0.03)+'s';
+    const qty = cart[p.id] || 0;
+    card.innerHTML = `
+      <div class="prod-photo-wrap" data-open="${p.id}">
+        <img class="prod-photo" src="${p.photo||''}" alt="${escapeHtml(p.nom)}">
+        <div class="zoom-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg></div>
+      </div>
+      <div class="prod-body">
+        <div class="prod-name" data-open="${p.id}">${escapeHtml(p.nom)}</div>
+        ${p.description ? `<div class="prod-desc-line">${escapeHtml(p.description)}</div>` : ''}
+        <div class="prod-price-chip">${fmt(p.prix)}</div>
+        <div class="add-zone"></div>
+      </div>
+    `;
+    card.querySelectorAll('[data-open]').forEach(el => { el.onclick = () => openDetail(p.id); });
+    const addZone = card.querySelector('.add-zone');
+    if(qty > 0){
+      addZone.innerHTML = `<div class="qty-row"><button class="qty-btn" data-action="dec">−</button><span class="qty-num">${qty}</span><button class="qty-btn" data-action="inc">+</button></div>`;
+      addZone.querySelector('[data-action=dec]').onclick = (e) => { e.stopPropagation(); changeQty(p.id, -1); };
+      addZone.querySelector('[data-action=inc]').onclick = (e) => { e.stopPropagation(); changeQty(p.id, 1); };
+    } else {
+      addZone.innerHTML = `<button class="prod-add">Ajouter</button>`;
+      addZone.querySelector('.prod-add').onclick = (e) => { e.stopPropagation(); changeQty(p.id, 1); };
+    }
+    grid.appendChild(card);
+  });
+}
+
+const detailOverlay = document.getElementById('detailOverlay');
+const detailSheet = document.getElementById('detailSheet');
+
+function openDetail(id){
+  const p = produits.find(x => x.id === id);
+  if(!p) return;
+  detailProductId = id;
+  document.getElementById('detailPhoto').src = p.photo || '';
+  document.getElementById('detailName').textContent = p.nom;
+  document.getElementById('detailPrice').textContent = fmt(p.prix);
+  document.getElementById('detailDesc').textContent = p.description || '';
+  document.getElementById('detailDesc').style.display = p.description ? 'block' : 'none';
+  refreshDetailQty();
+  detailOverlay.classList.add('show');
+  detailSheet.classList.add('show');
+}
+function closeDetail(){
+  detailOverlay.classList.remove('show');
+  detailSheet.classList.remove('show');
+}
+detailOverlay.onclick = closeDetail;
+document.getElementById('detailClose').onclick = closeDetail;
+
+function refreshDetailQty(){ document.getElementById('detailQty').textContent = cart[detailProductId] || 0; }
+document.getElementById('detailInc').onclick = () => { changeQty(detailProductId, 1); refreshDetailQty(); };
+document.getElementById('detailDec').onclick = () => { changeQty(detailProductId, -1); refreshDetailQty(); };
+document.getElementById('detailAddBtn').onclick = () => { changeQty(detailProductId, 1); refreshDetailQty(); };
+
+function changeQty(id, delta){
+  const current = cart[id] || 0;
+  const next = Math.max(0, current + delta);
+  if(next === 0) delete cart[id]; else cart[id] = next;
+  renderGrid();
+  updateCartFab();
+  renderCartSheet();
+  if(delta > 0) showToast('Ajouté au panier ✓');
+}
+
+function updateCartFab(){
+  const totalQty = Object.values(cart).reduce((a,b)=>a+b, 0);
+  const fab = document.getElementById('cartFab');
+  document.getElementById('cartBadge').textContent = totalQty;
+  fab.classList.toggle('hide', totalQty === 0);
+}
+
+function cartLines(){
+  return Object.entries(cart).map(([id, qty]) => {
+    const p = produits.find(x => x.id === id);
+    return (p && p.disponible !== false) ? { p, qty } : null;
+  }).filter(Boolean);
+}
+
+function renderCartSheet(){
+  const lines = cartLines();
+  const itemsWrap = document.getElementById('cartItems');
+  if(lines.length === 0){
+    itemsWrap.innerHTML = '<div class="cart-empty">Votre panier est vide.</div>';
+    document.getElementById('cartTotal').textContent = fmt(0);
+    return;
+  }
+  let total = 0;
+  itemsWrap.innerHTML = '';
+  lines.forEach(({p, qty}) => {
+    const sousTotal = p.prix * qty;
+    total += sousTotal;
+    const item = document.createElement('div');
+    item.className = 'cart-item';
+    item.innerHTML = `
+      <img src="${p.photo||''}" alt="">
+      <div class="cart-item-info">
+        <div class="cart-item-name">${escapeHtml(p.nom)}</div>
+        <div class="cart-item-price">${fmt(p.prix)} × ${qty} = ${fmt(sousTotal)}</div>
+        <div class="cart-item-rm" data-id="${p.id}">Retirer</div>
+      </div>
+      <div class="cart-item-qty">
+        <button data-id="${p.id}" data-action="dec">−</button>
+        <span>${qty}</span>
+        <button data-id="${p.id}" data-action="inc">+</button>
+      </div>
+    `;
+    item.querySelector('.cart-item-rm').onclick = () => { delete cart[p.id]; renderGrid(); updateCartFab(); renderCartSheet(); };
+    item.querySelectorAll('[data-action]').forEach(btn => {
+      btn.onclick = () => changeQty(p.id, btn.dataset.action==='inc' ? 1 : -1);
+    });
+    itemsWrap.appendChild(item);
+  });
+  document.getElementById('cartTotal').textContent = fmt(total);
+}
+
+const cartOverlay = document.getElementById('cartOverlay');
+const cartSheet = document.getElementById('cartSheet');
+document.getElementById('cartFab').onclick = () => {
+  renderCartSheet();
+  cartOverlay.classList.add('show');
+  cartSheet.classList.add('show');
+};
+cartOverlay.onclick = () => {
+  cartOverlay.classList.remove('show');
+  cartSheet.classList.remove('show');
+};
+
+document.getElementById('btnOrder').onclick = () => {
+  if(!liveConfirmed){ showToast('Vérification des disponibilités… réessaie dans un instant'); return; }
+  const lines = cartLines();
+  if(lines.length === 0){ showToast('Votre panier est vide'); return; }
+  let total = 0;
+  let msg = "Bonjour EDELUXE 👋 Je souhaite commander :\n\n";
+  lines.forEach(({p, qty}) => {
+    const sousTotal = p.prix * qty;
+    total += sousTotal;
+    msg += `• ${p.nom} × ${qty} = ${fmt(sousTotal)}\n`;
+  });
+  msg += `\nTotal : ${fmt(total)}\n\nMerci de me confirmer la disponibilité et les modalités de livraison.`;
+  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
+};
+
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.classList.remove('show'), 1800);
+}
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+const db = getFirestore(initializeApp({
+  apiKey: "AIzaSyABGcy1V-Js9tcxypAO-c7YhMyWDx41ROA",
+  authDomain: "perfect-services-sgi.firebaseapp.com",
+  projectId: "perfect-services-sgi",
+  storageBucket: "perfect-services-sgi.firebasestorage.app",
+  messagingSenderId: "942617089118",
+  appId: "1:942617089118:web:a65f5ff973a0ef441690cf"
+}));
+const q = query(collection(db, "produits"), orderBy("createdAt", "desc"));
+onSnapshot(q, (snap) => {
+  const arr = [];
+  snap.forEach(d => arr.push({ id: d.id, ...d.data() }));
+  window.edxSetProducts(arr);
+}, (err) => window.edxLoadError(err));
+</script>
+</body>
+</html>
