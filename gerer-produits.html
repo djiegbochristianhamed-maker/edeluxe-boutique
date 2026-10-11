@@ -129,6 +129,7 @@ const db = getFirestore(initializeApp({
   appId: "1:942617089118:web:a65f5ff973a0ef441690cf"
 }));
 
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 let editingId = null;
 let photoData = null;
 
@@ -202,23 +203,23 @@ document.getElementById('btnSave').onclick = async () => {
 
 document.getElementById('btnCancelEdit').onclick = resetForm;
 
-window.editProduit = function(id, nom, prix, categorie, description, disponible, photo){
+function editProduit(id, p){
   editingId = id;
-  photoData = photo || null;
+  photoData = p.photo || null;
   document.getElementById('formTitle').textContent = 'Modifier le produit';
-  document.getElementById('fNom').value = nom;
-  document.getElementById('fPrix').value = prix;
-  document.getElementById('fCategorie').value = categorie;
-  document.getElementById('fDescription').value = description || '';
-  if(photo){
+  document.getElementById('fNom').value = p.nom || '';
+  document.getElementById('fPrix').value = p.prix;
+  document.getElementById('fCategorie').value = p.categorie || '';
+  document.getElementById('fDescription').value = p.description || '';
+  if(p.photo){
     document.getElementById('photoPreview').style.display = 'block';
-    document.getElementById('photoPreviewImg').src = photo;
+    document.getElementById('photoPreviewImg').src = p.photo;
   }
-  fDispo.classList.toggle('on', disponible);
+  fDispo.classList.toggle('on', p.disponible !== false);
   document.getElementById('btnSave').textContent = 'Enregistrer les modifications';
   document.getElementById('btnCancelEdit').style.display = 'block';
   window.scrollTo({ top:0, behavior:'smooth' });
-};
+}
 
 window.supprimerProduit = async function(id){
   if(!confirm('Supprimer définitivement ce produit ?')) return;
@@ -247,13 +248,14 @@ function renderCategoryManager(){
     const row = document.createElement('div');
     row.className = 'cat-row';
     row.innerHTML = `
-      <input type="text" value="${name.replace(/"/g,'&quot;')}">
+      <input type="text">
       <span class="cat-count">${counts[name]} produit${counts[name]>1?'s':''}</span>
       <button class="cat-del" title="Supprimer cette catégorie">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
       </button>
     `;
     const input = row.querySelector('input');
+    input.value = name;
     const commitRename = async () => {
       const newName = input.value.trim();
       if(!newName || newName === name){ input.value = name; return; }
@@ -292,28 +294,28 @@ onSnapshot(q, (snap) => {
     const p = d.data();
     const card = document.createElement('div');
     card.className = 'prod-card';
-    const photoSafe = (p.photo||'').replace(/'/g, "\\'");
-    const nomSafe = (p.nom||'').replace(/'/g, "\\'");
-    const catSafe = (p.categorie||'').replace(/'/g, "\\'");
-    const descSafe = (p.description||'').replace(/'/g, "\\'").replace(/\n/g, ' ');
+    const disponible = p.disponible !== false;
     card.innerHTML = `
-      <img src="${p.photo||''}" alt="">
+      <img src="${esc(p.photo)}" alt="">
       <div class="prod-info">
-        <div class="prod-name">${p.nom}<span class="prod-badge ${p.disponible?'on':'off'}">${p.disponible?'Dispo':'Masqué'}</span></div>
-        <div class="prod-meta">${(p.prix||0).toLocaleString('fr-FR')} FCFA · ${p.categorie||'—'}</div>
+        <div class="prod-name">${esc(p.nom)}<span class="prod-badge ${disponible?'on':'off'}">${disponible?'Dispo':'Masqué'}</span></div>
+        <div class="prod-meta">${(p.prix||0).toLocaleString('fr-FR')} FCFA · ${esc(p.categorie||'—')}</div>
       </div>
       <div class="prod-actions">
-        <button class="icon-btn" onclick="toggleDispo('${d.id}', ${p.disponible})" title="Afficher/masquer côté client">
+        <button type="button" class="icon-btn" data-act="toggle" title="Afficher/masquer côté client">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12A10 10 0 1 1 12 2"/><path d="M22 2 12 12"/></svg>
         </button>
-        <button class="icon-btn" onclick="editProduit('${d.id}','${nomSafe}',${p.prix},'${catSafe}','${descSafe}',${p.disponible},'${photoSafe}')" title="Modifier">
+        <button type="button" class="icon-btn" data-act="edit" title="Modifier">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
         </button>
-        <button class="icon-btn" onclick="supprimerProduit('${d.id}')" title="Supprimer définitivement">
+        <button type="button" class="icon-btn" data-act="delete" title="Supprimer définitivement">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
         </button>
       </div>
     `;
+    card.querySelector('[data-act=toggle]').onclick = () => window.toggleDispo(d.id, disponible);
+    card.querySelector('[data-act=edit]').onclick = () => editProduit(d.id, p);
+    card.querySelector('[data-act=delete]').onclick = () => window.supprimerProduit(d.id);
     list.appendChild(card);
   });
 }, (err) => {
